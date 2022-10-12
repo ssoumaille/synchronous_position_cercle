@@ -107,14 +107,25 @@ class MyDraggableCircle extends ConsumerWidget {
   final Circle circle;
   const MyDraggableCircle(this.circle, {Key? key}) : super(key: key);
 
-  Widget _buildBox(Color color, Offset offset) => CircleAvatar(
+  Widget _circleAvatarColor(Color color) => CircleAvatar(
       backgroundColor: color,
     );
 
+  Widget _circleChildAvatarColor(Color color, double x, double y) => Positioned(
+      top: y,
+      left: x,
+      child: CircleAvatar (
+        backgroundColor: color,
+      ),
+  );
+
   @override
-  build(_, ref) => Draggable(
-      feedback: _buildBox(Colors.red, Offset(30.0, 100.0)),
-      childWhenDragging: _buildBox(const Color.fromRGBO(0, 0, 0, 0), Offset(30.0, 100.0)),
+  build(_, ref) => Positioned(
+    top: circle.y,
+    left: circle.x,
+    child: Draggable(
+      feedback: _circleAvatarColor(Colors.red),
+      childWhenDragging: _circleAvatarColor(const Color.fromRGBO(0, 0, 0, 0.2)),
       onDragUpdate: (details) {
         FirebaseFirestore.instance.collection(Collection.sacha_circle.name).doc(idCircle).update(
         {
@@ -122,8 +133,9 @@ class MyDraggableCircle extends ConsumerWidget {
           "y": details.localPosition.dy,
         });
       },
-      child: _buildBox(Colors.white, const Offset(30.0, 100.0)),
-    );
+      child: _circleAvatarColor(Colors.white),
+    ),
+  );
 }
 
 class NonDraggableCircle extends ConsumerWidget {
