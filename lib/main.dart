@@ -1,6 +1,11 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+import 'firebase_options.dart';
+
+void main() async {
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -43,7 +48,6 @@ class _MyHomePageState extends State<MyHomePage> {
       body: DragGame()
 
     );
-  }
 }
 
 
@@ -53,7 +57,7 @@ class DragGame extends StatefulWidget {
 }
 
 class _DragGameState extends State<DragGame> {
-  var  boxNumberIsDragged = null ;
+  var boxNumberIsDragged = null;
 
   @override
   void initState() {
@@ -63,35 +67,47 @@ class _DragGameState extends State<DragGame> {
 
   @override
   Widget build(BuildContext context) {
-    return  Container(
+    return Container(
         constraints: BoxConstraints.expand(),
         color: Colors.grey,
-        child:  Stack(
+        child: Stack(
           children: <Widget>[
-            buildDraggableBox(1, Colors.red, new Offset(30.0, 100.0)),
+            Container(
+              color: Colors.green,
+              width: 500,
+              height: 500,
+            ),
+            buildDraggableBox(1, Colors.red, const Offset(30.0, 100.0)),
 
           ],
         ));
   }
 
   Widget buildDraggableBox(int boxNumber, Color color, Offset offset) {
-    return  Draggable(
-      maxSimultaneousDrags: boxNumberIsDragged == null || boxNumber == boxNumberIsDragged ? 1 : 0,
-      child: _buildBox(color, offset),
+    Offset offsetChange;
+    return Draggable(
+      maxSimultaneousDrags: boxNumberIsDragged == null ||
+          boxNumber == boxNumberIsDragged ? 1 : 0,
+      child: _buildBox(Colors.white, offset),
       feedback: _buildBox(color, offset),
-      childWhenDragging: _buildBox(color, offset, onlyBorder: true),
+      childWhenDragging: _buildBox(Color.fromRGBO(0, 0, 0, 0), offset, onlyBorder: true),
       onDragStarted: () {
-        setState((){
+        setState(() {
           boxNumberIsDragged = boxNumber;
         });
       },
       onDragCompleted: () {
-        setState((){
+        setState(() {
           boxNumberIsDragged = null;
         });
       },
-      onDraggableCanceled: (_,__) {
-        setState((){
+      onDragUpdate: (details) {
+        print(details.localPosition);
+      },
+      onDraggableCanceled: (_, offset) {
+        offsetChange = offset;
+        print(offsetChange);
+        setState(() {
           boxNumberIsDragged = null;
         });
       },
@@ -100,7 +116,7 @@ class _DragGameState extends State<DragGame> {
 
   Widget _buildBox(Color color, Offset offset, {bool onlyBorder: false}) {
     return CircleAvatar(
-      backgroundColor: Colors.red,
+      backgroundColor: color,
 
     );
     Container(
@@ -111,4 +127,5 @@ class _DragGameState extends State<DragGame> {
           color: !onlyBorder ? color : Colors.grey,
           border: Border.all(color: color)),
     );
+  }
 }
