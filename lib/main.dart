@@ -9,6 +9,8 @@ void main() async {
   runApp(const MyApp());
 }
 
+enum Collection { position }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -32,32 +34,26 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
 
   @override
   build(_) => Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: DragGame()
-
+      body: const DragGame()
     );
 }
 
 
 class DragGame extends StatefulWidget {
+  const DragGame({super.key});
+
   @override
-  _DragGameState createState() => new _DragGameState();
+  _DragGameState createState() => _DragGameState();
 }
 
 class _DragGameState extends State<DragGame> {
-  var boxNumberIsDragged = null;
+  var boxNumberIsDragged;
 
   @override
   void initState() {
@@ -118,14 +114,6 @@ class _DragGameState extends State<DragGame> {
     return CircleAvatar(
       backgroundColor: color,
 
-    );
-    Container(
-      height: 50.0,
-      width: 50.0,
-      margin: EdgeInsets.only(left: offset.dx, top: offset.dy),
-      decoration: BoxDecoration(
-          color: !onlyBorder ? color : Colors.grey,
-          border: Border.all(color: color)),
     );
   }
 }
