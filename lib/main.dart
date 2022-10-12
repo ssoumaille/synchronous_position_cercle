@@ -1,10 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
 
 void main() async {
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
@@ -16,12 +16,12 @@ class MyApp extends StatelessWidget {
 
   @override
   build(_) => MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      );
 }
 
 class MyHomePage extends StatefulWidget {
@@ -34,16 +34,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   @override
   build(_) => Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: const DragGame()
-    );
+      body: const DragGame());
 }
-
 
 class DragGame extends StatefulWidget {
   const DragGame({super.key});
@@ -74,7 +71,6 @@ class _DragGameState extends State<DragGame> {
               height: 500,
             ),
             buildDraggableBox(1, Colors.red, const Offset(30.0, 100.0)),
-
           ],
         ));
   }
@@ -82,11 +78,12 @@ class _DragGameState extends State<DragGame> {
   Widget buildDraggableBox(int boxNumber, Color color, Offset offset) {
     Offset offsetChange;
     return Draggable(
-      maxSimultaneousDrags: boxNumberIsDragged == null ||
-          boxNumber == boxNumberIsDragged ? 1 : 0,
+      maxSimultaneousDrags:
+          boxNumberIsDragged == null || boxNumber == boxNumberIsDragged ? 1 : 0,
       child: _buildBox(Colors.white, offset),
       feedback: _buildBox(color, offset),
-      childWhenDragging: _buildBox(Color.fromRGBO(0, 0, 0, 0), offset, onlyBorder: true),
+      childWhenDragging:
+          _buildBox(Color.fromRGBO(0, 0, 0, 0), offset, onlyBorder: true),
       onDragStarted: () {
         setState(() {
           boxNumberIsDragged = boxNumber;
@@ -99,6 +96,10 @@ class _DragGameState extends State<DragGame> {
       },
       onDragUpdate: (details) {
         print(details.localPosition);
+        FirebaseFirestore.instance.collection(Collection.position.name).add({
+          "x": details.localPosition.dx,
+          "y": details.localPosition.dy,
+        });
       },
       onDraggableCanceled: (_, offset) {
         offsetChange = offset;
@@ -113,7 +114,6 @@ class _DragGameState extends State<DragGame> {
   Widget _buildBox(Color color, Offset offset, {bool onlyBorder: false}) {
     return CircleAvatar(
       backgroundColor: color,
-
     );
   }
 }
