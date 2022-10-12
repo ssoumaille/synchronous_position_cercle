@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -8,22 +10,29 @@ import 'circle/circle.dart';
 
 void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+
+  FirebaseFirestore.instance.collection(Collection.position.name)
+      .doc(idCircle).set({"x" : 0, "y" : 0});
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
-final StreamProvider streamProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.instance
+final circleProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.instance
     .collection(Collection.position.name).snapshots().map((event) {
-    return  event.docs.map((e) {
+    final rs = event.docs.map((e) {
+      print(event.docs);
         return Circle(
-          x: "0",
-          y: "0",
+          id: e.id,
+          x: e.data()['x'],
+          y: e.data()['y'],
         );
       }).toList();
+
+    return rs;
 }));
 
-
-
-
+final idCircle = '${Random().nextInt(9999999)}';
 
 enum Collection { position }
 
@@ -55,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body:  DragGame()
+      body: DragGame()
   );
 }
 
@@ -64,29 +73,29 @@ class DragGame extends ConsumerWidget {
 
   @override
   build(_,ref) {
-    final List<Circle>? pp = ref.watch(streamProvider).value;
+    final listCircle = ref.watch(circleProvider).value;
 
     return Container(
         constraints: const BoxConstraints.expand(),
         color: Colors.grey,
+        width: 250,
+        height: 250,
         child:Stack(
           children: [
-            for (Circle circle in pp!)
-              DraggableWidget()
+            for (Circle circle in listCircle!)
+              DraggableWidget(circle)
           ],
-        )
-
-
+        ),
     );
   }
 
 }
 
 class DraggableWidget extends ConsumerWidget {
-  DraggableWidget({Key? key}) : super(key: key);
+  final Circle circle;
+  DraggableWidget(this.circle, {Key? key}) : super(key: key);
 
   // late int boxNumberIsDragged = 0;
-  late String docId ="";
 
   Widget _buildBox(Color color, Offset offset, {bool onlyBorder: false}) {
     return CircleAvatar(
@@ -97,30 +106,15 @@ class DraggableWidget extends ConsumerWidget {
   @override
   build(_, ref) {
     return Draggable(
-      // maxSimultaneousDrags:
-      // 1 == boxNumberIsDragged ? 1 : 0,
-      feedback: _buildBox(Colors.red, Offset(0,0)),
+      feedback: _buildBox(Colors.red, Offset(circle.x.toDouble(), circle.y.toDouble())),
       childWhenDragging:
-      _buildBox(Color.fromRGBO(0, 0, 0, 0), Offset(0,0), onlyBorder: true),
-      onDragStarted: () {
-        FirebaseFirestore.instance.collection(Collection.position.name).add({
-          "x": 0,
-          "y": 0,
-        }).then((value) => docId = value.id);
-      },
-      onDragCompleted: () {
-      },
+      _buildBox(Color.fromRGBO(0, 0, 0, 0), Offset(circle.x.toDouble(), circle.y.toDouble()), onlyBorder: true),
       onDragUpdate: (details) {
-        // print(details.localPosition);
-        if (docId.isNotEmpty) {
-          FirebaseFirestore.instance.collection(Collection.position.name).doc(docId).update(
-              {
-                "x": details.localPosition.dx,
-                "y": details.localPosition.dy,
-              });
-        }
-      },
-      onDraggableCanceled: (_, __) {
+        FirebaseFirestore.instance.collection(Collection.position.name).doc(idCircle).update(
+        {
+          "x": details.localPosition.dx,
+          "y": details.localPosition.dy,
+        });
       },
       child: _buildBox(Colors.white, const Offset(30.0, 100.0)),
     );
