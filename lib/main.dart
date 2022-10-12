@@ -43,25 +43,76 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: DragGame()
+
+    );
+  }
+}
+
+
+class DragGame extends StatefulWidget {
+  @override
+  _DragGameState createState() => new _DragGameState();
+}
+
+class _DragGameState extends State<DragGame> {
+  var  boxNumberIsDragged = null ;
+
+  @override
+  void initState() {
+    // boxNumberIsDragged = null;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return  Container(
+        constraints: BoxConstraints.expand(),
+        color: Colors.grey,
+        child:  Stack(
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
+            buildDraggableBox(1, Colors.red, new Offset(30.0, 100.0)),
+
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        ));
+  }
+
+  Widget buildDraggableBox(int boxNumber, Color color, Offset offset) {
+    return  Draggable(
+      maxSimultaneousDrags: boxNumberIsDragged == null || boxNumber == boxNumberIsDragged ? 1 : 0,
+      child: _buildBox(color, offset),
+      feedback: _buildBox(color, offset),
+      childWhenDragging: _buildBox(color, offset, onlyBorder: true),
+      onDragStarted: () {
+        setState((){
+          boxNumberIsDragged = boxNumber;
+        });
+      },
+      onDragCompleted: () {
+        setState((){
+          boxNumberIsDragged = null;
+        });
+      },
+      onDraggableCanceled: (_,__) {
+        setState((){
+          boxNumberIsDragged = null;
+        });
+      },
+    );
+  }
+
+  Widget _buildBox(Color color, Offset offset, {bool onlyBorder: false}) {
+    return CircleAvatar(
+      backgroundColor: Colors.red,
+
+    );
+    Container(
+      height: 50.0,
+      width: 50.0,
+      margin: EdgeInsets.only(left: offset.dx, top: offset.dy),
+      decoration: BoxDecoration(
+          color: !onlyBorder ? color : Colors.grey,
+          border: Border.all(color: color)),
     );
   }
 }
