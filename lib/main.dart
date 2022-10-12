@@ -12,16 +12,15 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
 
-  FirebaseFirestore.instance.collection(Collection.position.name)
+  FirebaseFirestore.instance.collection(Collection.sacha_circle.name)
       .doc(idCircle).set({"x" : 0, "y" : 0});
 
   runApp(const ProviderScope(child: MyApp()));
 }
 
 final circleProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.instance
-    .collection(Collection.position.name).snapshots().map((event) {
+    .collection(Collection.sacha_circle.name).snapshots().map((event) {
     final rs = event.docs.map((e) {
-      print(event.docs);
         return Circle(
           id: e.id,
           x: e.data()['x'],
@@ -34,7 +33,7 @@ final circleProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.i
 
 final idCircle = '${Random().nextInt(9999999)}';
 
-enum Collection { position }
+enum Collection { sacha_circle }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -64,38 +63,46 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: DragGame()
+      body: const DragGame()
   );
 }
 
 class DragGame extends ConsumerWidget {
-   DragGame({super.key});
+   const DragGame({super.key});
+
+   Widget _buildCircles(AsyncValue<List<Circle>> asyncList) =>
+       asyncList.when(
+         data: (data) {
+           List<Widget> widgetsToShow = [];
+           for (Circle circle in data) {
+             if (circle.id == idCircle) {
+               widgetsToShow.add(MyDraggableCircle(circle));
+             } else {
+               widgetsToShow.add(NonDraggableCircle(circle));
+             }
+           }
+           return Stack(
+             children: widgetsToShow,
+           );
+         },
+         error: (err, stack) => const Icon(Icons.error, color: Colors.red,),
+         loading: () => const LinearProgressIndicator()
+     );
 
   @override
-  build(_,ref) {
-    final listCircle = ref.watch(circleProvider).value;
-
-    return Container(
+  build(_,ref) => Container(
         constraints: const BoxConstraints.expand(),
         color: Colors.grey,
         width: 250,
         height: 250,
-        child:Stack(
-          children: [
-            for (Circle circle in listCircle!)
-              DraggableWidget(circle)
-          ],
-        ),
+        child: _buildCircles(ref.watch(circleProvider)),
     );
-  }
 
 }
 
-class DraggableWidget extends ConsumerWidget {
+class MyDraggableCircle extends ConsumerWidget {
   final Circle circle;
-  DraggableWidget(this.circle, {Key? key}) : super(key: key);
-
-  // late int boxNumberIsDragged = 0;
+  MyDraggableCircle(this.circle, {Key? key}) : super(key: key);
 
   Widget _buildBox(Color color, Offset offset, {bool onlyBorder: false}) {
     return CircleAvatar(
@@ -106,11 +113,10 @@ class DraggableWidget extends ConsumerWidget {
   @override
   build(_, ref) {
     return Draggable(
-      feedback: _buildBox(Colors.red, Offset(circle.x.toDouble(), circle.y.toDouble())),
-      childWhenDragging:
-      _buildBox(Color.fromRGBO(0, 0, 0, 0), Offset(circle.x.toDouble(), circle.y.toDouble()), onlyBorder: true),
+      feedback: _buildBox(Colors.red, Offset(30.0, 100.0)),
+      childWhenDragging: _buildBox(const Color.fromRGBO(0, 0, 0, 0), Offset(30.0, 100.0), onlyBorder: true),
       onDragUpdate: (details) {
-        FirebaseFirestore.instance.collection(Collection.position.name).doc(idCircle).update(
+        FirebaseFirestore.instance.collection(Collection.sacha_circle.name).doc(idCircle).update(
         {
           "x": details.localPosition.dx,
           "y": details.localPosition.dy,
@@ -119,4 +125,19 @@ class DraggableWidget extends ConsumerWidget {
       child: _buildBox(Colors.white, const Offset(30.0, 100.0)),
     );
   }
+}
+
+class NonDraggableCircle extends ConsumerWidget {
+  NonDraggableCircle(this.circle, {Key? key}) : super(key: key);
+
+  final Circle circle;
+
+  @override
+  build(_, ref) => Positioned(
+      top: circle.y.toDouble(),
+      left: circle.x.toDouble(),
+      child: const CircleAvatar(
+        backgroundColor: Colors.blue,
+      ),
+  );
 }
