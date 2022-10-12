@@ -8,15 +8,13 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  build(_) {
-    return MaterialApp(
+  build(_) => MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
-  }
 }
 
 class MyHomePage extends StatefulWidget {
@@ -38,8 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
-  build(_) {
-    return Scaffold(
+  build(_) => Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
@@ -63,5 +60,4 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
-  }
 }
