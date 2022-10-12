@@ -13,7 +13,7 @@ void main() async {
 
 
   FirebaseFirestore.instance.collection(Collection.sacha_circle.name)
-      .doc(idCircle).set({"x" : 0, "y" : 0});
+      .doc(idCircle).set({"x" : .0, "y" : .0});
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -137,8 +137,8 @@ class NonDraggableCircle extends ConsumerWidget {
 
   @override
   build(_, ref) => Positioned(
-      top: circle.y.toDouble(),
-      left: circle.x.toDouble(),
+      top: circle.y,
+      left: circle.x,
       child: const CircleAvatar(
         backgroundColor: Colors.blue,
       ),

@@ -6,7 +6,7 @@ part 'circle.freezed.dart';
 class Circle with _$Circle {
   factory Circle({
     required String id,
-    required int x,
-    required int y,
+    required double x,
+    required double y,
   }) = _Circle;
 }
