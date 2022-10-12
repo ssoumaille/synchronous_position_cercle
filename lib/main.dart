@@ -52,10 +52,17 @@ class DragGame extends StatefulWidget {
 class _DragGameState extends State<DragGame> {
   var boxNumberIsDragged;
 
+  late String docId;
+
   @override
   void initState() {
     // boxNumberIsDragged = null;
     super.initState();
+
+    FirebaseFirestore.instance.collection(Collection.position.name).add({
+      "x": 0,
+      "y": 0,
+    }).then((value) => docId = value.id);
   }
 
   @override
@@ -77,6 +84,7 @@ class _DragGameState extends State<DragGame> {
 
   Widget buildDraggableBox(int boxNumber, Color color, Offset offset) {
     Offset offsetChange;
+
     return Draggable(
       maxSimultaneousDrags:
           boxNumberIsDragged == null || boxNumber == boxNumberIsDragged ? 1 : 0,
@@ -95,11 +103,14 @@ class _DragGameState extends State<DragGame> {
         });
       },
       onDragUpdate: (details) {
-        print(details.localPosition);
-        FirebaseFirestore.instance.collection(Collection.position.name).add({
-          "x": details.localPosition.dx,
-          "y": details.localPosition.dy,
-        });
+        // print(details.localPosition);
+        if (docId.isNotEmpty) {
+          FirebaseFirestore.instance.collection(Collection.position.name).doc(docId).update(
+              {
+                "x": details.localPosition.dx,
+                "y": details.localPosition.dy,
+              });
+        }
       },
       onDraggableCanceled: (_, offset) {
         offsetChange = offset;
