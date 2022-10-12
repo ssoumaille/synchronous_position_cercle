@@ -85,7 +85,10 @@ class DragGame extends ConsumerWidget {
              children: widgetsToShow,
            );
          },
-         error: (err, stack) => const Icon(Icons.error, color: Colors.red,),
+         error: (err, stack) {
+            print(err);
+            return const Icon(Icons.error, color: Colors.red,);
+         },
          loading: () => const LinearProgressIndicator()
      );
 
