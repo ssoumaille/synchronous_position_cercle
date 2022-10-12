@@ -8,18 +8,23 @@ import 'circle/circle.dart';
 
 void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-final StreamProvider streamProvider = StreamProvider((ref) => FirebaseFirestore.instance
+final StreamProvider streamProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.instance
     .collection(Collection.position.name).snapshots().map((event) {
-      event.docs.map((e) {
+
+    return  event.docs.map((e) {
         return Circle(
-          x: e.data()["x"],
-          y: e.data()["y"],
+          x: "0",
+          y: "0",
         );
-      });
+      }).toList();
 }));
+
+
+
+
 
 enum Collection { position }
 
@@ -51,37 +56,40 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: const DragGame());
+      body:  DragGame()
+  );
 }
 
-class DragGame extends StatefulWidget {
-  const DragGame({super.key});
+class DragGame extends ConsumerWidget {
+   DragGame({super.key});
 
   @override
-  _DragGameState createState() => _DragGameState();
-}
+  build(_,ref) {
+    final List<Circle>? pp = ref.watch(streamProvider).value;
 
-class _DragGameState extends State<DragGame> {
+    print("pp");
+    print(pp);
+    return Container(
+        constraints: const BoxConstraints.expand(),
+        color: Colors.grey,
+        child:Stack(
+          children: [
 
-  @override
-  void initState() {
-    super.initState();
+            DraggableWidget()
+          ],
+        )
+
+
+    );
   }
 
-  @override
-  build(_) =>
-      Container(
-          constraints: const BoxConstraints.expand(),
-          color: Colors.grey,
-          child: DraggableWidget()
-      );
 }
 
 class DraggableWidget extends ConsumerWidget {
   DraggableWidget({Key? key}) : super(key: key);
 
-  late int boxNumberIsDragged;
-  late String docId;
+  // late int boxNumberIsDragged = 0;
+  late String docId ="";
 
   Widget _buildBox(Color color, Offset offset, {bool onlyBorder: false}) {
     return CircleAvatar(
@@ -92,11 +100,11 @@ class DraggableWidget extends ConsumerWidget {
   @override
   build(_, ref) {
     return Draggable(
-      maxSimultaneousDrags:
-      1 == boxNumberIsDragged ? 1 : 0,
-      feedback: _buildBox(Colors.red, Offset.),
+      // maxSimultaneousDrags:
+      // 1 == boxNumberIsDragged ? 1 : 0,
+      feedback: _buildBox(Colors.red, Offset(0,0)),
       childWhenDragging:
-      _buildBox(Color.fromRGBO(0, 0, 0, 0), offset, onlyBorder: true),
+      _buildBox(Color.fromRGBO(0, 0, 0, 0), Offset(0,0), onlyBorder: true),
       onDragStarted: () {
         FirebaseFirestore.instance.collection(Collection.position.name).add({
           "x": 0,
