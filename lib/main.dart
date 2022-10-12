@@ -13,7 +13,6 @@ void main() async {
 
 final StreamProvider streamProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.instance
     .collection(Collection.position.name).snapshots().map((event) {
-
     return  event.docs.map((e) {
         return Circle(
           x: "0",
@@ -67,15 +66,13 @@ class DragGame extends ConsumerWidget {
   build(_,ref) {
     final List<Circle>? pp = ref.watch(streamProvider).value;
 
-    print("pp");
-    print(pp);
     return Container(
         constraints: const BoxConstraints.expand(),
         color: Colors.grey,
         child:Stack(
           children: [
-
-            DraggableWidget()
+            for (Circle circle in pp!)
+              DraggableWidget()
           ],
         )
 
