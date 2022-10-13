@@ -19,7 +19,7 @@ void main() async {
       .doc(idCircle).get();
   myCircle = Circle(id: idCircle, x: document.data()!['x'], y:document.data()!['y'], color:document.data()!['color']);
 
-  throttler.throttleTime(const Duration(seconds: 1)).forEach((element) {
+  throttler.throttleTime(const Duration(milliseconds: 100)).forEach((element) {
     element();
   });
 
@@ -54,7 +54,7 @@ final firestoreSCircleProvider = StreamProvider<List<Circle>>((ref) => FirebaseF
     return rs;
 }));
 
-final idCircle = '123456788';//'''${Random().nextInt(9999999)}';
+final idCircle = '1234588';//'''${Random().nextInt(9999999)}';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -187,8 +187,8 @@ class MyDraggableCircle extends ConsumerWidget {
       top: ref.watch(offsetProvider).dy,
       left: ref.watch(offsetProvider).dx,
       child: Draggable(
-        feedback: _buildCircle(Color.fromRGBO(0, 0, 0, 0)),
-        childWhenDragging: _buildCircle(Colors.red.shade50),
+        feedback: _buildCircle(const Color.fromRGBO(0, 0, 0, 0)),
+        childWhenDragging: _buildCircle(randomColor.withOpacity(0.5)),
         onDragUpdate: (details) {
           Offset position = _limitingMovementToWindowOnly(details.localPosition);
           throttler.add(updatePositionFirestore);
@@ -196,6 +196,6 @@ class MyDraggableCircle extends ConsumerWidget {
         },
         // onDraggableCanceled: (_,Offset offset){
         // },
-        child: _buildCircle(Colors.green),
+        child: _buildCircle(randomColor),
     ));
 }
