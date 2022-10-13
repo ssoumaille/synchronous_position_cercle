@@ -39,6 +39,7 @@ dependencies:
   cloud_firestore:
   flutter_riverpod:
   freezed_annotation:
+  rxdart: ^0.27.5
 
 dev_dependencies:
   flutter_test:
