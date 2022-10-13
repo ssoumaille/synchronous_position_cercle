@@ -54,7 +54,9 @@ final firestoreSCircleProvider = StreamProvider<List<Circle>>((ref) => FirebaseF
     return rs;
 }));
 
-final idCircle = '${math.Random().nextInt(9999999)}';
+final idCircle = '9999999';//'''${Random().nextInt(9999999)}';
+
+enum Collection { position }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
