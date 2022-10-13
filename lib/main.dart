@@ -12,14 +12,14 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
 
-  FirebaseFirestore.instance.collection(Collection.sacha_circle.name)
+  FirebaseFirestore.instance.collection(Collection.position.name)
       .doc(idCircle).set({"x" : .0, "y" : .0});
 
   runApp(const ProviderScope(child: MyApp()));
 }
 
 final circleProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.instance
-    .collection(Collection.sacha_circle.name).snapshots().map((event) {
+    .collection(Collection.position.name).snapshots().map((event) {
     final rs = event.docs.map((e) {
         return Circle(
           id: e.id,
@@ -27,13 +27,12 @@ final circleProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.i
           y: e.data()['y'],
         );
       }).toList();
-
     return rs;
 }));
 
-final idCircle = '${Random().nextInt(9999999)}';
+const idCircle = '9999997';
 
-enum Collection { sacha_circle }
+enum Collection { position }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -44,7 +43,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: const MyHomePage(title: 'Flutter Demo Home Page'),
+        home: const MyHomePage(title: 'Synchronous position circle'),
       );
 }
 
@@ -60,9 +59,9 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   build(_) => Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
+      // appBar: AppBar(
+      //   title: Text(widget.title),
+      // ),
       body: const DragGame()
   );
 }
@@ -74,12 +73,17 @@ class DragGame extends ConsumerWidget {
        asyncList.when(
          data: (data) {
            List<Widget> widgetsToShow = [];
+           late MyDraggableCircle? myDraggable;
            for (Circle circle in data) {
              if (circle.id == idCircle) {
-               widgetsToShow.add(MyDraggableCircle(circle));
+               // widgetsToShow.add(MyDraggableCircle(circle));
+               myDraggable = MyDraggableCircle(circle);
              } else {
                widgetsToShow.add(NonDraggableCircle(circle));
              }
+           }
+           if (myDraggable != null) {
+             widgetsToShow.add(myDraggable);
            }
            return Stack(
              children: widgetsToShow,
@@ -92,14 +96,14 @@ class DragGame extends ConsumerWidget {
          loading: () => const LinearProgressIndicator()
      );
 
-  @override
-  build(_,ref) => Container(
-        constraints: const BoxConstraints.expand(),
-        color: Colors.grey,
-        width: 250,
-        height: 250,
-        child: _buildCircles(ref.watch(circleProvider)),
-    );
+   @override
+   build(_,ref) => Container(
+     constraints: const BoxConstraints.expand(),
+     color: Colors.grey,
+     width: 250,
+     height: 250,
+     child: _buildCircles(ref.watch(circleProvider)),
+   );
 
 }
 
@@ -124,18 +128,22 @@ class MyDraggableCircle extends ConsumerWidget {
     top: circle.y,
     left: circle.x,
     child: Draggable(
-      feedback: _circleAvatarColor(Colors.red),
-      childWhenDragging: _circleAvatarColor(const Color.fromRGBO(0, 0, 0, 0.2)),
-      onDragUpdate: (details) {
-        FirebaseFirestore.instance.collection(Collection.sacha_circle.name).doc(idCircle).update(
-        {
-          "x": details.localPosition.dx,
-          "y": details.localPosition.dy,
-        });
-      },
-      child: _circleAvatarColor(Colors.white),
-    ),
-  );
+    feedback: _circleAvatarColor(Colors.red),
+    childWhenDragging: _circleAvatarColor(const Color.fromRGBO(0, 0, 0, 0.2)),
+    onDragUpdate: (details) {
+      FirebaseFirestore.instance.collection(Collection.position.name).doc(idCircle).update(
+          {
+            "x": details.localPosition.dx,
+            "y": details.localPosition.dy,
+          });
+
+    },
+    // onDraggableCanceled: (_, offset) {
+    //
+    // },
+    child: _circleAvatarColor(Colors.white),
+  ),);
+
 }
 
 class NonDraggableCircle extends ConsumerWidget {
