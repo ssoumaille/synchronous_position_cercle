@@ -44,7 +44,7 @@ final circleProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.i
     return rs;
 }));
 
-final idCircle = '123456788';//'''${Random().nextInt(9999999)}';
+final idCircle = '9999999';//'''${Random().nextInt(9999999)}';
 
 enum Collection { position }
 
@@ -85,27 +85,15 @@ class DragGame extends ConsumerWidget {
 
   @override
   build(_,ref) {
-    final listCircle = ref.watch(circleProvider).value;
-
-
-
-
-
-    // final listCircle = ref.watch(circleProvider).;
-
-    return Container(
-        constraints: const BoxConstraints.expand(),
-        color: Colors.grey,
-        width: 250,
-        height: 250,
-        child:Stack(
+    final listCircle = ref.watch(circleProvider).value ?? [];
+    return Stack(
           children: [
-            for (Circle circle in listCircle!)
+            for (Circle circle in listCircle)
               OtherWidget(circle),
 
             DraggableWidget(myCircle),
           ],
-        ),
+
     );
   }
 
@@ -128,7 +116,7 @@ class OtherWidget extends ConsumerWidget {
   build(_, ref) {
     return Positioned(
         top:circle.y.toDouble(),left: circle.x.toDouble() ,
-        child: _buildBox(Colors.white, const Offset(30.0, 100.0))) ;
+        child: _buildBox(Colors.blue, const Offset(30.0, 100.0))) ;
   }
 }
 
@@ -144,11 +132,9 @@ class DraggableWidget extends ConsumerWidget {
   // late int boxNumberIsDragged = 0;
 
   Widget _buildBox(Color color, Offset offset, {bool onlyBorder: false}) {
-    return Positioned(
-        top:offset.dx.toDouble(),left: offset.dy.toDouble() ,
-    child: CircleAvatar(
+    return CircleAvatar(
       backgroundColor: color,
-    ));
+    );
   }
 
   @override
