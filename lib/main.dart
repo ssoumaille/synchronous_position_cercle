@@ -8,24 +8,27 @@ import 'package:rxdart/rxdart.dart';
 
 import 'firebase_options.dart';
 import 'circle/circle.dart';
+import 'dart:math' as math;
 
 void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   FirebaseFirestore.instance.collection(Collection.position.name)
-      .doc(idCircle).set({"x" : 0, "y" : 0});
+      .doc(idCircle).set({"x" : 0, "y" : 0,"color":col});
   final document  = await FirebaseFirestore.instance
       .collection(Collection.position.name)
       .doc(idCircle).get() ;
   myCircle = Circle(id: idCircle, x: document.data()!['x'], y:document.data()!['y']);
 
-  throttler.throttleTime(const Duration(milliseconds: 2500)).forEach((element) {
+  throttler.throttleTime(const Duration(milliseconds: 1000)).forEach((element) {
     element();
   });
   throttler.add(updatePositionFirestore);
 
   runApp(const ProviderScope(child: MyApp()));
 }
+
+final  col = (math.Random().nextDouble() * 0xFFFFFF).toInt();
 
 final throttler = PublishSubject<Function()>();
 late final Circle myCircle;
@@ -42,7 +45,7 @@ final circleProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.i
     return rs;
 }));
 
-final idCircle = '9999999';//'''${Random().nextInt(9999999)}';
+final idCircle = '123456788';//'''${Random().nextInt(9999999)}';
 
 enum Collection { position }
 
@@ -102,7 +105,8 @@ class OtherWidget extends ConsumerWidget {
 
   Widget _buildBox(Color color, Offset offset, {bool onlyBorder: false}) {
     return CircleAvatar(
-      backgroundColor: color,
+      backgroundColor: Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0)
+      ,
     );
   }
 
@@ -143,9 +147,9 @@ class DraggableWidget extends ConsumerWidget {
         left:ref.watch(offsetProvider).dx ,
 
         child: Draggable(
-      feedback: _buildBox(Colors.green, Offset.zero),
+      feedback: _buildBox( Color(col).withOpacity(0.5), Offset.zero),
       childWhenDragging:
-      _buildBox(Color.fromRGBO(0, 0, 0, 0.5), Offset.zero, onlyBorder: true),
+      _buildBox( Color(col).withOpacity(1), Offset.zero, onlyBorder: true),
       onDragUpdate: (details) {
         myThrottledOffset = details.localPosition;
         throttler.add(updatePositionFirestore);
