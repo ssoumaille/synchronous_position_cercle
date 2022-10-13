@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -13,38 +13,48 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   FirebaseFirestore.instance.collection(Collection.position.name)
-      .doc(idCircle).set({"x" : 0, "y" : 0});
+      .doc(idCircle).set({"x" : 0, "y" : 0, "color": color});
   final document  = await FirebaseFirestore.instance
       .collection(Collection.position.name)
       .doc(idCircle).get() ;
-  myCircle = Circle(id: idCircle, x: document.data()!['x'], y:document.data()!['y']);
+  myCircle = Circle(id: idCircle, x: document.data()!['x'], y:document.data()!['y'], color:document.data()!['color']);
 
-  throttler.throttleTime(const Duration(milliseconds: 2500)).forEach((element) {
+  throttler.throttleTime(const Duration(seconds: 1)).forEach((element) {
     element();
   });
-  throttler.add(updatePositionFirestore);
 
   runApp(const ProviderScope(child: MyApp()));
 }
 
-final throttler = PublishSubject<Function()>();
-late final Circle myCircle;
+enum Collection { position }
 
-final circleProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.instance
+// Random color for circles
+final color = (math.Random().nextDouble() * 0xFFFFFF).toInt();
+final randomColor = Color(color).withOpacity(1.0);
+
+// Throttler
+final throttler = PublishSubject<Function()>();
+Offset myThrottledOffset = Offset(0, 0);
+
+// instantiate myCircle
+Circle myCircle = Circle(id: "0", x: 0, y: 0, color: 0);
+
+// Providers
+final offsetProvider = StateProvider<Offset>((ref) => Offset(0, 0));
+final firestoreSCircleProvider = StreamProvider<List<Circle>>((ref) => FirebaseFirestore.instance
     .collection(Collection.position.name).snapshots().map((event) {
     final rs = event.docs.where((ee) => ee.id != idCircle).map((e) {
         return Circle(
           id: e.id,
           x: e.data()['x'],
           y: e.data()['y'],
-        );
+          color: e.data()['color']
+,        );
       }).toList();
     return rs;
 }));
 
-final idCircle = '9999999';//'''${Random().nextInt(9999999)}';
-
-enum Collection { position }
+final idCircle = '${math.Random().nextInt(9999999)}';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -52,9 +62,7 @@ class MyApp extends StatelessWidget {
   @override
   build(_) => MaterialApp(
         title: 'Flutter Demo',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
+        theme: ThemeData(primarySwatch: Colors.blue,),
         home: const MyHomePage(title: 'Flutter Demo Home Page'),
       );
 }
@@ -69,7 +77,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   @override
-  build(_) => Scaffold(
+  build(_) => const Scaffold(
       // appBar: AppBar(
       //   title: Text(widget.title),
       // ),
@@ -78,11 +86,11 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class DragGame extends ConsumerWidget {
-   DragGame({super.key});
+   const DragGame({super.key});
 
   @override
   build(_,ref) {
-    final listCircle = ref.watch(circleProvider).value ?? [];
+    final listCircle = ref.watch(firestoreSCircleProvider).value ?? [];
     return Stack(
           children: [
             for (Circle circle in listCircle)
@@ -96,27 +104,21 @@ class DragGame extends ConsumerWidget {
 
 class OtherWidget extends ConsumerWidget {
   final Circle circle;
-  OtherWidget(this.circle, {Key? key}) : super(key: key);
+  const OtherWidget(this.circle, {Key? key}) : super(key: key);
 
-  // late int boxNumberIsDragged = 0;
-
-  Widget _buildBox(Color color, Offset offset, {bool onlyBorder: false}) {
-    return CircleAvatar(
-      backgroundColor: color,
-    );
+  Widget _buildCircle(int color) {
+    final _color = Color(color).withOpacity(0.8);
+    return CircleAvatar(backgroundColor: _color,);
   }
 
   @override
-  build(_, ref) {
-    return Positioned(
-        top:circle.y.toDouble(),left: circle.x.toDouble() ,
-        child: _buildBox(Colors.blue, const Offset(30.0, 100.0))) ;
-  }
+  build(_, ref) => Positioned(
+      top: circle.y.toDouble(),
+      left: circle.x.toDouble(),
+      child: _buildCircle(circle.color),
+  );
 }
 
-final offsetProvider = StateProvider<Offset>((ref) => Offset(0, 0));
-
-late Offset myThrottledOffset = Offset(0, 0);
 Future<void> updatePositionFirestore() {
   print("I'm throttled");
   return FirebaseFirestore.instance.collection(Collection.position.name).doc(idCircle).update(
@@ -128,39 +130,28 @@ Future<void> updatePositionFirestore() {
 
 class DraggableWidget extends ConsumerWidget {
   final Circle circle ;
-  DraggableWidget(this.circle,  {Key? key}) : super(key: key);
+  const DraggableWidget(this.circle,  {Key? key}) : super(key: key);
 
-  Widget _buildBox(Color color, Offset offset, {bool onlyBorder: false}) {
-    return CircleAvatar(
-      backgroundColor: color,
-    );
-  }
+  Widget _buildCirle(Color color) => CircleAvatar(backgroundColor: color,);
 
   @override
-  build(_, ref) {
-    return Positioned(
-        top:ref.watch(offsetProvider).dy ,
-        left:ref.watch(offsetProvider).dx ,
-
-        child: Draggable(
-      feedback: _buildBox(Colors.green, Offset.zero),
-      childWhenDragging:
-      _buildBox(Color.fromRGBO(0, 0, 0, 0.5), Offset.zero, onlyBorder: true),
-      onDragUpdate: (details) {
-        myThrottledOffset = details.localPosition;
-        throttler.add(updatePositionFirestore);
-      },
-      onDraggableCanceled: (_,Offset offset){
-        ref.read(offsetProvider.notifier).update((state) => offset);
-
-        // FirebaseFirestore.instance.collection(Collection.position.name).doc(idCircle).update(
-        //     {
-        //       "x": offset.dx,
-        //       "y": offset.dy,
-        //     });
-      },
-
-      child: _buildBox(Colors.green, const Offset(30.0, 100.0)),
-    )) ;
-  }
+  build(_, ref) => Positioned(
+      top:ref.watch(offsetProvider).dy ,
+      left:ref.watch(offsetProvider).dx ,
+      child: Draggable(
+        feedback: _buildCirle(Colors.green),
+        onDragUpdate: (details) {
+          myThrottledOffset = details.localPosition;
+          throttler.add(updatePositionFirestore);
+        },
+        onDraggableCanceled: (_,Offset offset){
+          ref.read(offsetProvider.notifier).update((state) => offset);
+          // FirebaseFirestore.instance.collection(Collection.position.name).doc(idCircle).update(
+          //     {
+          //       "x": offset.dx,
+          //       "y": offset.dy,
+          //     });
+        },
+        child: _buildCirle(Colors.green),
+    ));
 }

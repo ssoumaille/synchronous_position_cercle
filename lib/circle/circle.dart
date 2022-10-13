@@ -8,5 +8,6 @@ class Circle with _$Circle {
     required String id,
     required int x,
     required int y,
+    required int color,
   }) = _Circle;
 }
