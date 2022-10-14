@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -151,6 +152,19 @@ class DragGame extends ConsumerWidget {
                 width: 20,
                 height: 500,
                 color: Colors.red.shade400,
+              ),
+            ),
+
+            Positioned(
+              top: 600,
+              left: 200,
+
+              child: ElevatedButton(
+                child: Text("add user"),
+                onPressed: (){
+                  firestore.collection(Collection.position.name)
+                      .doc((math.Random().nextInt(99999)).toInt().toString()).set({"x" : Random().nextInt(460), "y" : Random().nextInt(460), "color": (math.Random().nextDouble() * 0xFFFFFF).toInt()});
+                },
               ),
             ),
             for (Circle circle in listCircle)

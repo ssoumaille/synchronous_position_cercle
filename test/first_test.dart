@@ -55,6 +55,8 @@ void main() {
     var gamerscount = tester.elementList(find.byType(CirclesFromFirestore)).length;
 
     expect(gamerscount, 5);
+    var newc = tester.element(find.byType(NewCercle)).length;
+
 
 
 
