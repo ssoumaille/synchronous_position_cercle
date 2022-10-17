@@ -1,13 +1,14 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class Circle {
+  final String id;
+  final String name;
+  final int x;
+  final int y;
+  final int color;
+  const Circle(this.id, this.x, this.y, this.color,this.name);
+}
 
-part 'circle.freezed.dart';
-
-@freezed
-class Circle with _$Circle {
-  factory Circle({
-    required String id,
-    required int x,
-    required int y,
-    required int color,
-  }) = _Circle;
+class Player {
+  final String id;
+  final String name;
+  const Player(this.id, this.name,);
 }
