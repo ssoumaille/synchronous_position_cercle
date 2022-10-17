@@ -1,9 +1,9 @@
 import 'dart:math' as math;
-import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -27,14 +27,14 @@ Future<void> initApp() async{
       .doc(idCircle).get();
   myCircle = Circle(id: idCircle, x: document.data()!['x'], y:document.data()!['y'], color:document.data()!['color']);
 
-  /* TODO  Find a way to not comment theses lines for testing*/
-  // throttler.throttleTime(const Duration(milliseconds: 100)).forEach((element) {
-  //   isSync =true;
-  //   element();
-  // });
+  /* TODO  Find a way to not comment theses lines for testing */
+  throttler.throttleTime(const Duration(milliseconds: 500)).forEach((element) {
+    isSync =true;
+    element();
+  });
 }
 late  FirebaseFirestore  firestoreInstance;
-final idCircle = '9999999';//'''${Random().nextInt(9999999)}';
+final idCircle = '2394';//'''${Random().nextInt(9999999)}';
 
 enum Collection { position }
 late bool isSync;
@@ -104,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
       // appBar: AppBar(
       //   title: Text(widget.title),
       // ),
-      body: DragGame()
+      body: RotateTransformation() // DragGame()
   );
 }
 
@@ -156,8 +156,8 @@ class DragGame extends ConsumerWidget {
                 onPressed: (){
                   firestoreInstance.collection(Collection.position.name)
                       .doc((math.Random().nextInt(99999)).toInt().toString())
-                      .set({"x" : Random().nextInt(460),
-                    "y" : Random().nextInt(460),
+                      .set({"x" : math.Random().nextInt(460),
+                    "y" : math.Random().nextInt(460),
                     "color": (math.Random().nextDouble() * 0xFFFFFF).toInt()});
                 },
               ),
@@ -188,6 +188,7 @@ class CirclesFromFirestore extends ConsumerWidget {
 }
 
 updatePositionFirestore() {
+  print('updating position in firestore...');
   return firestoreInstance.collection(Collection.position.name).doc(idCircle).update(
       {
         "x": myThrottledOffset.dx,
@@ -217,4 +218,41 @@ class MyDraggableCircle extends ConsumerWidget {
         // },
         child: buildCircle(randomColor),
     ));
+}
+
+class RotateTransformation extends StatefulWidget {
+  const RotateTransformation({super.key});
+
+  @override
+  RotateTransformationState createState() => RotateTransformationState();
+}
+
+
+class RotateTransformationState
+    extends State<RotateTransformation> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 8),)
+    ..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();// last line
+  }
+
+  @override
+  build(_) => Scaffold(
+    body: AnimatedBuilder(
+      animation: _controller,
+      child: const DragGame(),
+      builder: (BuildContext context, Widget? child) {
+        return Transform.rotate(
+            angle: _controller.value * 2.0 * math.pi,
+            child: child,
+        );
+      },
+    ),
+  );
+
 }
