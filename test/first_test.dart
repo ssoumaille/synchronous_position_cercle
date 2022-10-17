@@ -55,10 +55,16 @@ void main() {
     var gamerscount = tester.elementList(find.byType(CirclesFromFirestore)).length;
 
     expect(gamerscount, 5);
-    var newc = tester.element(find.byType(NewCercle)).length;
 
+    expect(find.byType(ElevatedButton), findsOneWidget);
 
+    await tester.tap(find.byType(ElevatedButton));
 
+    await tester.pump();
+
+    gamerscount = tester.elementList(find.byType(CirclesFromFirestore)).length;
+
+    expect(gamerscount, 6);
 
   });
 }

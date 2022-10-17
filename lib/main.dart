@@ -11,35 +11,40 @@ import 'firebase_options.dart';
 import 'circle/circle.dart';
 
 void main() async {
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  firestore =FirebaseFirestore.instance;
+  firestore = FirebaseFirestore.instance;
 
   await initApp();
 
   runApp(const ProviderScope(child: MyApp()));
 }
 
-initApp() async{
-  issync =false;
-  firestore.collection(Collection.position.name)
-      .doc(idCircle).set({"x" : 20, "y" : 20, "color": color});
-  final document  = await firestore
+initApp() async {
+  issync = false;
+  firestore
       .collection(Collection.position.name)
-      .doc(idCircle).get();
-  myCircle = Circle(id: idCircle, x: document.data()!['x'], y:document.data()!['y'], color:document.data()!['color']);
+      .doc(idCircle)
+      .set({"x": 20, "y": 20, "color": color});
+  final document =
+      await firestore.collection(Collection.position.name).doc(idCircle).get();
+  myCircle = Circle(
+      id: idCircle,
+      x: document.data()!['x'],
+      y: document.data()!['y'],
+      color: document.data()!['color']);
 
   // throttler.throttleTime(const Duration(milliseconds: 100)).forEach((element) {
   //   issync =true;
   //   element();
   // });
-
 }
-late  FirebaseFirestore  firestore;
-final idCircle = '9999999';//'''${Random().nextInt(9999999)}';
+
+late FirebaseFirestore firestore;
+final idCircle = '9999999'; //'''${Random().nextInt(9999999)}';
 
 enum Collection { position }
-late bool issync ;
+
+late bool issync;
 // Random color for circles
 final color = (math.Random().nextDouble() * 0xFFFFFF).toInt();
 final randomColor = Color(color).withOpacity(1.0);
@@ -51,19 +56,20 @@ late Circle myCircle;
 
 // Providers
 final offsetProvider = StateProvider<Offset>((ref) => Offset(20, 20));
-final firestoreSCircleProvider = StreamProvider<List<Circle>>((ref) => firestore
-    .collection(Collection.position.name).snapshots().map((event) {
-  return event.docs.where((ee) => ee.id != idCircle).map((e) {
+final firestoreSCircleProvider = StreamProvider<List<Circle>>((ref) =>
+    firestore.collection(Collection.position.name).snapshots().map((event) {
+      return event.docs.where((ee) => ee.id != idCircle).map((e) {
         return Circle(
           id: e.id,
           x: e.data()['x'],
           y: e.data()['y'],
-          color: e.data()['color']
-,        );
+          color: e.data()['color'],
+        );
       }).toList();
-}));
+    }));
 
-
+// final int colorval = 0;
+// final colorProvider = StreamProvider((ref) => Stream.periodic(Duration(seconds: 1), (count) =>  count%2));
 
 Offset limitingMovementToWindowOnly(Offset position) {
   myThrottledOffset = position;
@@ -82,22 +88,22 @@ Offset limitingMovementToWindowOnly(Offset position) {
   return myThrottledOffset;
 }
 
-
-
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   build(_) => MaterialApp(
         title: 'Flutter Demo',
-        theme: ThemeData(primarySwatch: Colors.blue,),
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
         home: const MyHomePage(title: 'Flutter Demo Home Page'),
       );
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
+
   final String title;
 
   @override
@@ -110,118 +116,160 @@ class _MyHomePageState extends State<MyHomePage> {
       // appBar: AppBar(
       //   title: Text(widget.title),
       // ),
-      body: DragGame()
-  );
+      body: DragGame());
 }
 
 class DragGame extends ConsumerWidget {
-   const DragGame({super.key});
+  const DragGame({super.key});
 
   @override
-  build(_,ref) {
+  build(_, ref) {
     final listCircle = ref.watch(firestoreSCircleProvider).value ?? [];
     return Stack(
-          children: [
-            Positioned(
-              top: 0,
-              child: Container(
-                width: 520,
-                height: 20,
-                color: Colors.red.shade400,
-              ),
-            ),
-            Positioned(
-              left: 0,
-              child: Container(
-                width: 20,
-                height: 520,
-                color: Colors.red.shade400,
-              ),
-            ),
-            Positioned(
-              top: 500,
-              child: Container(
-                width: 520,
-                height: 20,
-                color: Colors.red.shade400,
-              ),
-            ),
-            Positioned(
-              left: 500,
-              child: Container(
-                width: 20,
-                height: 500,
-                color: Colors.red.shade400,
-              ),
-            ),
-
-            Positioned(
-              top: 600,
-              left: 200,
-
-              child: ElevatedButton(
-                child: Text("add user"),
-                onPressed: (){
-                  firestore.collection(Collection.position.name)
-                      .doc((math.Random().nextInt(99999)).toInt().toString()).set({"x" : Random().nextInt(460), "y" : Random().nextInt(460), "color": (math.Random().nextDouble() * 0xFFFFFF).toInt()});
-                },
-              ),
-            ),
-            for (Circle circle in listCircle)
-              CirclesFromFirestore(circle),
-            MyDraggableCircle(myCircle),
-          ],
+      children: [
+        Positioned(
+          top: 0,
+          child: Container(
+            width: 520,
+            height: 20,
+            color: Colors.red.shade400,
+          ),
+        ),
+        Positioned(
+          left: 0,
+          child: Container(
+            width: 20,
+            height: 520,
+            color: Colors.red.shade400,
+          ),
+        ),
+        Positioned(
+          top: 500,
+          child: Container(
+            width: 520,
+            height: 20,
+            color: Colors.red.shade400,
+          ),
+        ),
+        Positioned(
+          left: 500,
+          child: Container(
+            width: 20,
+            height: 500,
+            color: Colors.red.shade400,
+          ),
+        ),
+        Positioned(
+          top: 520,
+          left: 200,
+          child: ElevatedButton(
+            child: Text("add user"),
+            onPressed: () {
+              firestore
+                  .collection(Collection.position.name)
+                  .doc((math.Random().nextInt(99999)).toInt().toString())
+                  .set({
+                "x": Random().nextInt(460),
+                "y": Random().nextInt(460),
+                "color": (math.Random().nextDouble() * 0xFFFFFF).toInt()
+              });
+            },
+          ),
+        ),
+        for (Circle circle in listCircle) CirclesFromFirestore(circle),
+        MyDraggableCircle(myCircle),
+      ],
     );
   }
 }
 
 class CirclesFromFirestore extends ConsumerWidget {
   final Circle circle;
+
   const CirclesFromFirestore(this.circle, {Key? key}) : super(key: key);
 
   Widget _buildCircle(int color) {
     final _color = Color(color).withOpacity(0.8);
-    return CircleAvatar(backgroundColor: _color,);
+    return CircleAvatar(
+      backgroundColor: _color,
+    );
   }
 
   @override
   build(_, ref) => Positioned(
-      top: circle.y.toDouble(),
-      left: circle.x.toDouble(),
-      child: _buildCircle(circle.color),
-  );
+        top: circle.y.toDouble(),
+        left: circle.x.toDouble(),
+        child: _buildCircle(circle.color),
+      );
 }
 
- updatePositionFirestore() {
-  return firestore.collection(Collection.position.name).doc(idCircle).update(
-      {
-        "x": myThrottledOffset.dx,
-        "y": myThrottledOffset.dy,
-      });
+updatePositionFirestore() {
+  return firestore.collection(Collection.position.name).doc(idCircle).update({
+    "x": myThrottledOffset.dx,
+    "y": myThrottledOffset.dy,
+  });
 }
 
-class MyDraggableCircle extends ConsumerWidget {
-  final Circle circle ;
-  const MyDraggableCircle(this.circle,  {Key? key}) : super(key: key);
+class MyDraggableCircle extends ConsumerStatefulWidget {
+  final Circle circle;
 
-  Widget buildCircle(Color color) => CircleAvatar(backgroundColor: color,);
-
-
+  const MyDraggableCircle(this.circle, {Key? key}) : super(key: key);
 
   @override
-  build(_, ref) => Positioned(
-      top: ref.watch(offsetProvider).dy,
-      left: ref.watch(offsetProvider).dx,
-      child: Draggable(
-        feedback: buildCircle(const Color.fromRGBO(0, 0, 0, 0)),
-        childWhenDragging: buildCircle(randomColor.withOpacity(0.5)),
-        onDragUpdate: (details) {
-          limitingMovementToWindowOnly(details.localPosition);
-          throttler.add(updatePositionFirestore);
-          ref.read(offsetProvider.notifier).update((state) => myThrottledOffset);
-        },
-        // onDraggableCanceled: (_,Offset offset){
-        // },
-        child: buildCircle(randomColor),
-    ));
+  MyDraggableCircleState createState() => MyDraggableCircleState();
+}
+
+class MyDraggableCircleState extends ConsumerState<MyDraggableCircle>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Color?> _colorTween;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    )..repeat();
+
+    _colorTween =
+        ColorTween(begin: randomColor, end: Colors.black).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget buildCircle(Color color) => CircleAvatar(
+        backgroundColor: color,
+      );
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+        top: ref.watch(offsetProvider).dy,
+        left: ref.watch(offsetProvider).dx,
+        child: Draggable(
+          feedback: buildCircle(const Color.fromRGBO(0, 0, 0, 0)),
+          childWhenDragging: buildCircle(randomColor.withOpacity(0.5)),
+          onDragUpdate: (details) {
+            limitingMovementToWindowOnly(details.localPosition);
+            throttler.add(updatePositionFirestore);
+            ref
+                .read(offsetProvider.notifier)
+                .update((state) => myThrottledOffset);
+          },
+          // onDraggableCanceled: (_,Offset offset){
+          // },
+          child: AnimatedBuilder(
+            animation: _colorTween,
+            builder: (BuildContext _, Widget? __) {
+              return CircleAvatar(
+                backgroundColor: _colorTween.value!,
+              );
+            },
+          ),
+        ),
+      );
 }
